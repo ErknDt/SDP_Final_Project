@@ -1,0 +1,46 @@
+@startuml
+!pragma layout smetana
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 150
+title Cart and checkout - Strategy and Facade
+interface DiscountStrategy {
+  +calculateDiscount(subtotal: BigDecimal): BigDecimal
+}
+class NoDiscountStrategy
+class PercentageDiscountStrategy {
+  -percentage: int {readOnly}
+}
+class ThresholdDiscountStrategy {
+  -threshold: BigDecimal {readOnly}
+  -discount: BigDecimal {readOnly}
+}
+class ShoppingCart <<Context>> {
+  -items: List<CartItem>
+  -strategy: DiscountStrategy
+  +setStrategy(strategy): void
+  +addItem(item, quantity): void
+  +quote(catalog): CartQuote
+  +clear(): void
+}
+class CheckoutFacade <<Facade>> {
+  -catalog: Catalog {readOnly}
+  -payment: PaymentGateway {readOnly}
+  +placeOrder(cart): OrderResult
+}
+interface Catalog
+interface PaymentGateway {
+  +pay(amount: BigDecimal): boolean
+}
+class ShopApplication <<Client>>
+NoDiscountStrategy ..|> DiscountStrategy
+PercentageDiscountStrategy ..|> DiscountStrategy
+ThresholdDiscountStrategy ..|> DiscountStrategy
+ShoppingCart --> "1" DiscountStrategy : strategy
+ShoppingCart ..> Catalog : reads current prices
+CheckoutFacade --> "1" Catalog
+CheckoutFacade --> "1" PaymentGateway
+CheckoutFacade ..> ShoppingCart : quotes and clears
+ShopApplication ..> ShoppingCart : manages
+ShopApplication ..> CheckoutFacade : places order
+@enduml

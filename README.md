@@ -1,93 +1,123 @@
 # E-Commerce Shopping Cart
 
-We are building a configurable laptop shop with six integrated design patterns.
+We use six design patterns in a Java 17 console application for configurable laptops.
+The application includes a cart, replaceable discounts, product notifications and
+checkout through a simulated payment service.
 
-## Setup
+## Build and run
 
-- Clone this repository and open `pom.xml` as a Maven project in IntelliJ IDEA.
-- Select JDK 17 and reload the Maven project.
-- With Maven available, run `mvn verify` from the project directory.
+Open `pom.xml` as a Maven project in IntelliJ IDEA and select JDK 17.
+Run `kz.aitu.sdp.shop.app.ShopApplication.main` for the interactive menu.
 
-The current foundation contains the Maven configuration, package layout and
-shared interfaces. The next milestone is implementing the three team modules.
+From a terminal with JDK 17 and Maven available:
 
-## Team ownership
+```sh
+mvn verify
+java -jar target/SDP_Final_Project-1.0-SNAPSHOT.jar
+```
 
-| Contributor | Patterns | Packages |
+Run the reproducible purchase scenario:
+
+```sh
+java -jar target/SDP_Final_Project-1.0-SNAPSHOT.jar --demo
+```
+
+The build runs 49 JUnit tests. Production code uses the Java standard library.
+
+## Patterns and team responsibilities
+
+| Team member | Patterns | Main classes |
 | --- | --- | --- |
-| Allazhar | Strategy, Facade | `discount`, `cart`, `checkout` |
-| Akylzhan | Builder, Decorator | `product`, `app` |
-| Erhan | Observer, Adapter | `catalog`, `payment` |
+| Allazhar Kuat | Strategy, Facade | `ShoppingCart`, discount strategies, `CheckoutFacade` |
+| Akylzhan Khafiz | Builder, Decorator | `Laptop.Builder`, `Laptop`, product decorators |
+| Yerkhan Dautbekov | Observer, Adapter | `ProductCatalog`, observers, `PaymentAdapter` |
 
-All packages are under `kz.aitu.sdp.shop`. Shared interfaces are in `contracts`.
-Tests belong under `src/test/java` using the same package names as their module.
-Each contributor supplies their module's tests, UML and report sections.
+Group SE-2515. These are the assigned areas for integration, review and explanation.
+
+## Application behavior
+
+- Configure RAM, SSD capacity and color using `Laptop.Builder`.
+- Add gift wrapping for 3000.00 KZT and extended warranty for 25000.00 KZT.
+- Add, remove and change the quantity of cart lines.
+- Switch between no discount, 10 percent and a 50000 KZT discount from 700000 KZT.
+- Change a catalog price or stock amount and receive immediate observer callbacks.
+- Demonstrate payment approval, a declined payment and a successful retry.
+
+The catalog starts with CAMPUS at 300000.00 KZT with five units and PRO at
+500000.00 KZT with two units. RAM 16/32 GB adds 20000/50000 KZT. SSD 512/1024 GB
+adds 15000/35000 KZT. The default 8 GB RAM and 256 GB SSD add zero.
+
+The interactive menu also has a command to decline the next simulated payment.
 
 ## Shared contracts
 
-| Interface | Implementation owner | Purpose |
-| --- | --- | --- |
-| `PurchasableItem` | Akylzhan | Configured product and service decorators |
-| `DiscountStrategy` | Allazhar | Discount amount calculated from a subtotal |
-| `Catalog` | Erhan | Product registration, prices, stock and subscriptions |
-| `ProductObserver` | Erhan and subscribing clients | Product change callbacks |
-| `PaymentGateway` | Erhan | Checkout-facing payment interface |
+All interfaces are in `kz.aitu.sdp.shop.contracts`.
 
-### Product identity and prices
+| Interface | Purpose |
+| --- | --- |
+| `PurchasableItem` | Identifier, description and per-unit surcharge |
+| `DiscountStrategy` | Discount amount calculated from the subtotal |
+| `Catalog` | Current base prices, stock and product subscriptions |
+| `ProductObserver` | Callback after a product change |
+| `PaymentGateway` | Checkout-facing payment interface |
 
-- A configured laptop and its decorators keep the same catalog `productId`.
-- Catalog stock is tracked per base model identifier.
-- `getAdditionalPrice()` includes all configuration and service surcharges for
-  one unit. Each decorator adds its surcharge to the wrapped item's surcharge.
-- The catalog stores the current base price. Cart totals read current prices
-  from `Catalog` whenever they are calculated.
-- Line subtotal = (catalog unit price + item additional price) * quantity.
-- Order subtotal is the sum of its line subtotals. The active strategy calculates
-  a discount amount. Payable total = subtotal - discount amount.
-- Money uses `BigDecimal` in KZT. Monetary amounts have at most two decimal
-  places. Calculated monetary results use `RoundingMode.HALF_UP`.
-- Item quantities are positive integers. When several cart lines share a product
-  identifier, checkout sums their quantities before checking or decreasing stock.
+Configured laptops and decorators preserve the same catalog identifier. Stock is
+tracked per base model. Checkout aggregates quantities when several lines share an
+identifier. Each quote reads current catalog prices and then stores immutable order
+lines, so an existing quote retains the prices used to create it.
 
-### Catalog updates and observers
+Line subtotal = (catalog base price + configuration and service surcharges) * quantity.
+Payable total = subtotal - the active strategy's discount amount.
 
-- `addProduct` registers each base model before it is used in the cart.
-- `updatePrice` and `updateStock` notify observers after the state changes.
-- Subscriptions are per product. A callback receives the identifier, updated
-  base price and updated stock.
-- Subscribing starts delivery of future changes. Initial values can be read
-  with `getUnitPrice` and `getStock`.
-- A failing observer is reported separately. It must allow other observers to
-  receive the update and must not interrupt checkout after stock was committed.
+Money uses `BigDecimal` in KZT, with two decimal places. Percentage results use
+`RoundingMode.HALF_UP`. Prices, quantities and strategy arguments are validated.
 
-### Checkout and payment
+## Checkout guarantees and scope
 
-The initial application executes sequentially on one thread. Checkout validates
-the complete cart, reads current prices and stock, calculates the payable total,
-calls `PaymentGateway.pay`, and decreases stock after a successful payment.
+`CheckoutFacade` validates the complete cart and stock before calling payment.
+A decline preserves cart contents and stock. Approval decreases stock, notifies
+observers and clears the cart. Catalog stock changes validate all requested products
+before updating any of them. Observer runtime exceptions are logged separately so
+other subscribers and checkout can continue. Reentrant calls to the same facade are
+rejected while checkout is in progress.
 
-A declined payment preserves cart contents and stock. A successful checkout
-creates an order result and clears the purchased cart. Stock updates also notify
-observers. The payment adapter connects the shared interface to a simulated
-payment service with a different calling convention.
+This version uses in-memory data, synchronous callbacks, one currency and a simulated
+payment service. Application actions run sequentially on one thread. Supporting
+concurrent customers and an external payment provider would require persistent
+orders, stock reservations, transactional updates and payment idempotency.
+
+## Project layout
+
+- `product` contains Builder and Decorator.
+- `discount`, `cart` and `checkout` contain Strategy, Facade and order snapshots.
+- `catalog` and `payment` contain Observer and Adapter.
+- `common/Money` centralizes monetary input validation.
+- `app/ShopApplication` constructs the objects and handles console input/output.
+- `src/test/java` contains seven test classes covering all six patterns and the menu.
+
+## Verification and project materials
+
+`docs/test-results.txt` summarizes the successful test run. `docs/demo-output.txt`
+contains actual output from the runnable JAR.
+
+- `docs/uml` contains three class diagrams and a purchase sequence diagram in
+  PlantUML source, PNG and SVG formats.
+- `docs/screenshots` contains screenshots of the running application.
+- `docs/SDP_Final_Project_Report.pdf` contains the shared project report.
+
+The submission consists of the PDF report and the source ZIP. The source ZIP includes
+`pom.xml`, this README, Java code, tests and documentation.
 
 ## Working together
 
-1. Update local `main` before starting a task.
-2. Create a personal branch from the shared foundation, for example
-   `codex/allazhar-checkout`, `codex/akylzhan-products` or
-   `codex/erhan-catalog-payment`.
-3. Implement against the shared interfaces and keep changes in the owned packages.
-4. Discuss shared interface and `pom.xml` changes before editing them.
-5. Run the build and relevant tests before opening a pull request into `main`.
-6. After a merge, update the other branches from `main`.
+Use a personal branch for new changes and update it from `main`. Discuss changes to
+shared interfaces before editing them. Run `mvn verify` before merging changes.
+Each member should review their assigned patterns and contribute their own changes.
 
-Package placeholder files named `.gitkeep` preserve empty directories in Git.
+## References
 
-## Final deliverables
-
-We will prepare one report with an introduction, implementation sections,
-UML diagrams, application screenshots, Java code excerpts, conclusion and further
-work. The Moodle deliverables are the PDF report and a ZIP of the source code.
-Each member implements and explains their two patterns and their integration
-with the rest of the application.
+- Course material: Final Project Defense Requirements, AITU.
+- Eric Freeman et al., *Head First Design Patterns*, O'Reilly.
+- Robert C. Martin, *Clean Code*, Chapters 16 and 17, Prentice Hall.
+- [JUnit 5.12.2 user guide](https://docs.junit.org/5.12.2/user-guide/).
+- [PlantUML class diagrams](https://plantuml.com/class-diagram).

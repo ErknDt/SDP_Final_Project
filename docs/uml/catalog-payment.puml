@@ -1,0 +1,42 @@
+@startuml
+!pragma layout smetana
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 150
+title Catalog and payment - Observer and Adapter
+interface Catalog <<Subject API>> {
+  +updatePrice(id, price): void
+  +updateStock(id, stock): void
+  +decreaseStock(quantities): void
+  +subscribe(id, observer): void
+  +unsubscribe(id, observer): void
+}
+class ProductCatalog <<ConcreteSubject>> {
+  -products: Map<String, ProductEntry>
+  -notifyObservers(productId): void
+}
+interface ProductObserver <<Observer>> {
+  +onProductChanged(id, price, stock): void
+}
+class ConsoleNotificationObserver <<ConcreteObserver>>
+class LowStockObserver <<ConcreteObserver>> {
+  -threshold: int {readOnly}
+}
+interface PaymentGateway <<Target>> {
+  +pay(amount: BigDecimal): boolean
+}
+class PaymentAdapter <<Adapter>> {
+  -service: LegacyPaymentService {readOnly}
+  +pay(amount: BigDecimal): boolean
+}
+class LegacyPaymentService <<Adaptee>> {
+  +charge(amountInTiyn: long, currencyCode: String): String
+  +declineNextPayment(): void
+}
+ProductCatalog ..|> Catalog
+ProductCatalog --> "0..*" ProductObserver : subscriptions per product
+ConsoleNotificationObserver ..|> ProductObserver
+LowStockObserver ..|> ProductObserver
+PaymentAdapter ..|> PaymentGateway
+PaymentAdapter --> "1" LegacyPaymentService : adapts calls
+@enduml

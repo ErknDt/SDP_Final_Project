@@ -1,0 +1,38 @@
+@startuml
+skinparam shadowing false
+skinparam dpi 150
+hide footbox
+title Checkout flow with a replaceable discount and adapted payment
+participant ShopApplication as App
+participant CheckoutFacade as Facade
+participant ShoppingCart as Cart
+participant DiscountStrategy as Discount
+participant ProductCatalog as Catalog
+participant PaymentAdapter as Adapter
+participant LegacyPaymentService as Legacy
+participant ProductObserver as Observer
+App -> Facade : placeOrder(cart)
+Facade -> Cart : quote(catalog)
+Cart -> Catalog : getUnitPrice(productId)
+Catalog --> Cart : current base price
+Cart -> Discount : calculateDiscount(subtotal)
+Discount --> Cart : discount amount
+Cart --> Facade : immutable CartQuote
+Facade -> Catalog : getStock(productId)
+Catalog --> Facade : available quantity
+Facade -> Adapter : pay(total)
+Adapter -> Legacy : charge(total in tiyn, "KZT")
+Legacy --> Adapter : APPROVED or DECLINED
+Adapter --> Facade : boolean
+alt payment approved
+  Facade -> Catalog : decreaseStock(quantities)
+  Catalog -> Catalog : validate all, then update all
+  Catalog -> Observer : onProductChanged(id, price, stock)
+  Observer --> Catalog
+  Catalog --> Facade
+  Facade -> Cart : clear()
+  Facade --> App : successful OrderResult
+else payment declined
+  Facade --> App : declined OrderResult
+end
+@enduml

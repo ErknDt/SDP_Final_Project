@@ -1,0 +1,41 @@
+@startuml
+!pragma layout smetana
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam dpi 150
+title Product configuration - Builder and Decorator
+interface PurchasableItem {
+  +getProductId(): String
+  +getDescription(): String
+  +getAdditionalPrice(): BigDecimal
+}
+class Laptop {
+  -productId: String {readOnly}
+  -model: String {readOnly}
+  -ramGb: int {readOnly}
+  -storageGb: int {readOnly}
+  -color: String {readOnly}
+}
+class "Laptop.Builder" as Builder {
+  +Builder(productId, model)
+  +ramGb(value): Builder
+  +storageGb(value): Builder
+  +color(value): Builder
+  +build(): Laptop
+}
+abstract class ProductDecorator {
+  #wrapped: PurchasableItem {readOnly}
+}
+class GiftWrapDecorator
+class ExtendedWarrantyDecorator
+class ShopApplication <<Client>>
+Laptop ..|> PurchasableItem
+ProductDecorator ..|> PurchasableItem
+GiftWrapDecorator --|> ProductDecorator
+ExtendedWarrantyDecorator --|> ProductDecorator
+ProductDecorator --> "1" PurchasableItem : wrapped
+Builder ..> Laptop : creates
+ShopApplication ..> Builder : configures
+ShopApplication ..> GiftWrapDecorator : wraps
+ShopApplication ..> ExtendedWarrantyDecorator : wraps
+@enduml

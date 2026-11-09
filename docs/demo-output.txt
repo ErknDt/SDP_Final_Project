@@ -1,0 +1,37 @@
+LAPTOP SHOP DEMO | KZT
+
+1. Configure a laptop and add services
+1. Campus Laptop, 16 GB RAM, 512 GB SSD, Black + gift wrap + extended warranty
+   2 x 363000.00 = 726000.00 KZT
+Subtotal 726000.00 | Discount 0.00 | Total 726000.00 KZT
+
+2. Compare discounts on the same cart
+1. Campus Laptop, 16 GB RAM, 512 GB SSD, Black + gift wrap + extended warranty
+   2 x 363000.00 = 726000.00 KZT
+Subtotal 726000.00 | Discount 50000.00 | Total 676000.00 KZT
+1. Campus Laptop, 16 GB RAM, 512 GB SSD, Black + gift wrap + extended warranty
+   2 x 363000.00 = 726000.00 KZT
+Subtotal 726000.00 | Discount 72600.00 | Total 653400.00 KZT
+
+3. Update the catalog price
+[UPDATE] CAMPUS | base price 280000.00 KZT | stock 5
+1. Campus Laptop, 16 GB RAM, 512 GB SSD, Black + gift wrap + extended warranty
+   2 x 343000.00 = 686000.00 KZT
+Subtotal 686000.00 | Discount 68600.00 | Total 617400.00 KZT
+
+4. Decline a payment, then retry checkout
+Payment declined. The cart is ready for another attempt.
+1. Campus Laptop, 16 GB RAM, 512 GB SSD, Black + gift wrap + extended warranty
+   2 x 343000.00 = 686000.00 KZT
+Subtotal 686000.00 | Discount 68600.00 | Total 617400.00 KZT
+Cart lines after checkout: 1
+Stock after declined payment: 5
+[UPDATE] CAMPUS | base price 280000.00 KZT | stock 3
+[LOW STOCK] CAMPUS has 3 units left.
+Order confirmed.
+1. Campus Laptop, 16 GB RAM, 512 GB SSD, Black + gift wrap + extended warranty
+   2 x 343000.00 = 686000.00 KZT
+Subtotal 686000.00 | Discount 68600.00 | Total 617400.00 KZT
+Cart lines after checkout: 0
+Stock after successful payment: 3
+Payment adapter sent 61740000 tiyn.
